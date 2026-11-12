@@ -1,0 +1,47 @@
+# Gradle & Kotlin Build Outputs
+.gradle/
+.kotlin/
+build/
+app/build/
+*/build/
+.cxx/
+captures/
+gradle-app.setting
+
+# Local SDK, Signing & Secrets (NEVER commit)
+local.properties
+keystore.properties
+secrets.properties
+google-services.json
+service-account*.json
+.env
+.env.*
+*.keystore
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+
+# Compiled Packages
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# IDE & Editors
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS & Temp Files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.hprof
+window_dump.xml
+tmp/

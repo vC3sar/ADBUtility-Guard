@@ -1,0 +1,50 @@
+<resources>
+    <!-- Brand & Accent Colors -->
+    <color name="brand_primary">#0D47A1</color>
+    <color name="brand_primary_dark">#002171</color>
+    <color name="brand_accent">#FF9800</color>
+    <color name="brand_warning">#E69500</color>
+    <color name="brand_danger">#D32F2F</color>
+    <color name="brand_success">#2E7D32</color>
+
+    <!-- Overlay Colors (Light Theme Defaults) -->
+    <color name="overlay_dim_scrim">#99000000</color>
+    <color name="overlay_card_bg">#FFFFFF</color>
+    <color name="overlay_text_title">#BA1A1A</color>
+    <color name="overlay_text_body">#191C1E</color>
+    <color name="overlay_border_warning">#FFB4AB</color>
+    <color name="overlay_btn_exit_bg">#0D47A1</color>
+    <color name="overlay_btn_exit_text">#FFFFFF</color>
+    <color name="overlay_btn_cancel_stroke">#0D47A1</color>
+    <color name="overlay_btn_cancel_text">#0D47A1</color>
+
+    <!-- Light Theme Colors -->
+    <color name="md_theme_light_primary">#0D47A1</color>
+    <color name="md_theme_light_onPrimary">#FFFFFF</color>
+    <color name="md_theme_light_primaryContainer">#D9E2FF</color>
+    <color name="md_theme_light_onPrimaryContainer">#001A43</color>
+    <color name="md_theme_light_secondary">#535F70</color>
+    <color name="md_theme_light_onSecondary">#FFFFFF</color>
+    <color name="md_theme_light_background">#F8F9FA</color>
+    <color name="md_theme_light_onBackground">#191C1E</color>
+    <color name="md_theme_light_surface">#FFFFFF</color>
+    <color name="md_theme_light_onSurface">#191C1E</color>
+    <color name="md_theme_light_surfaceVariant">#E1E2EC</color>
+    <color name="md_theme_light_onSurfaceVariant">#44474F</color>
+    <color name="md_theme_light_outline">#757780</color>
+
+    <!-- Dark Theme Colors -->
+    <color name="md_theme_dark_primary">#ADC6FF</color>
+    <color name="md_theme_dark_onPrimary">#002E69</color>
+    <color name="md_theme_dark_primaryContainer">#004494</color>
+    <color name="md_theme_dark_onPrimaryContainer">#D9E2FF</color>
+    <color name="md_theme_dark_secondary">#BBC7DB</color>
+    <color name="md_theme_dark_onSecondary">#253140</color>
+    <color name="md_theme_dark_background">#111318</color>
+    <color name="md_theme_dark_onBackground">#E2E2E6</color>
+    <color name="md_theme_dark_surface">#191C20</color>
+    <color name="md_theme_dark_onSurface">#E2E2E6</color>
+    <color name="md_theme_dark_surfaceVariant">#44474F</color>
+    <color name="md_theme_dark_onSurfaceVariant">#C5C6D0</color>
+    <color name="md_theme_dark_outline">#8F909A</color>
+</resources>

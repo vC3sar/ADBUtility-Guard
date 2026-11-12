@@ -1,0 +1,37 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="64dp"
+    android:height="64dp"
+    android:viewportWidth="64"
+    android:viewportHeight="64">
+
+    <!-- Flechas circulares blancas de actualización dentro del círculo -->
+    <path
+        android:pathData="M21,28 A12,12 0 0,1 40,21"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="3.2" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M43,16 L43,24 L35,23 Z" />
+
+    <path
+        android:pathData="M43,36 A12,12 0 0,1 24,43"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="3.2" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M21,48 L21,40 L29,41 Z" />
+
+    <!-- Anillo rojo de prohibición y línea diagonal -->
+    <path
+        android:pathData="M32,6 A26,26 0 1,1 31.99,6 Z"
+        android:strokeColor="#EC3B43"
+        android:strokeWidth="5" />
+    <path
+        android:pathData="M14,14 L50,50"
+        android:strokeColor="#EC3B43"
+        android:strokeLineCap="round"
+        android:strokeWidth="5" />
+</vector>
+

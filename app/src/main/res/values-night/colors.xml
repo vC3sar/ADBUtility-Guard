@@ -1,0 +1,12 @@
+<resources>
+    <!-- Overlay Colors (Dark Theme Overrides) -->
+    <color name="overlay_dim_scrim">#B3000000</color>
+    <color name="overlay_card_bg">#23242A</color>
+    <color name="overlay_text_title">#FFB4AB</color>
+    <color name="overlay_text_body">#E2E2E6</color>
+    <color name="overlay_border_warning">#93000A</color>
+    <color name="overlay_btn_exit_bg">#ADC6FF</color>
+    <color name="overlay_btn_exit_text">#002E69</color>
+    <color name="overlay_btn_cancel_stroke">#ADC6FF</color>
+    <color name="overlay_btn_cancel_text">#ADC6FF</color>
+</resources>

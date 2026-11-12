@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Permisos requeridos para persistencia, feedback y avisos de protección -->
+    <uses-permission android:name="android.intent.action.BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@null"
+        android:fullBackupContent="false"
+        android:icon="@drawable/ic_guard_shield"
+        android:label="@string/app_name"
+        android:roundIcon="@drawable/ic_guard_shield"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ADBUtilityGuard">
+
+        <!-- Actividad Principal -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Panel simplificado de Update Guard -->
+        <activity
+            android:name=".ui.updateguard.UpdateGuardActivity"
+            android:exported="false"
+            android:label="@string/update_guard_title" />
+
+        <!-- Servicio de Accesibilidad para Detección y Advertencia Flotante -->
+        <service
+            android:name=".ResetAccessibilityService"
+            android:exported="true"
+            android:label="@string/accessibility_service_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- Actividad Panel App Protection -->
+        <activity
+            android:name=".ui.protection.AppProtectionActivity"
+            android:exported="false"
+            android:label="@string/app_protection_title" />
+
+        <!-- Receptor Oficial de Administración del Dispositivo (Device Admin) -->
+        <receiver
+            android:name=".admin.GuardDeviceAdminReceiver"
+            android:description="@string/app_protection_device_admin_explanation"
+            android:exported="true"
+            android:label="@string/app_protection_device_admin_label"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+                <action android:name="android.app.action.DEVICE_ADMIN_DISABLED" />
+                <action android:name="android.app.action.DEVICE_ADMIN_DISABLE_REQUESTED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Receptor de Inicio y Actualización de Paquete -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Receptor de Consultas ADB -->
+        <receiver
+            android:name=".receiver.AdbQueryReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.adbutility.guard.QUERY" />
+            </intent-filter>
+        </receiver>
+
+        <!-- ContentProvider para Integración Segura con ADB UtilityTools (Electron) -->
+        <provider
+            android:name=".provider.GuardContentProvider"
+            android:authorities="com.adbutility.guard.provider"
+            android:exported="true" />
+
+    </application>
+
+</manifest>
+

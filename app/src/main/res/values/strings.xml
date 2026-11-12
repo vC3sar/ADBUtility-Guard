@@ -1,0 +1,94 @@
+<resources>
+    <string name="app_name">ADBUtility Guard</string>
+    <string name="accessibility_service_name">ADBUtility Guard Service</string>
+    <string name="accessibility_service_description">Detecta accesos a las opciones de restablecimiento de fábrica, DNS privado y actualizaciones del sistema para mostrar advertencias de protección.</string>
+
+    <!-- Update Guard Visual Dialog Strings (Exact Specification) -->
+    <string name="update_guard_brand_prefix">ADBUtility</string>
+    <string name="update_guard_brand_suffix"> Guard</string>
+    <string name="update_blocked_title">Actualización\nbloqueada</string>
+    <string name="update_blocked_desc">Se detectó un intento de reiniciar para actualizar el sistema.</string>
+    <string name="update_blocked_secondary">Puedes seguir usando tu teléfono con total tranquilidad.</string>
+    <string name="update_blocked_btn">Entendido</string>
+
+    <!-- Update Guard Simple UI Strings -->
+    <string name="update_guard_title">Update Guard</string>
+    <string name="update_guard_subtitle">Protección de actualizaciones.</string>
+    <string name="update_guard_protection_on">Protección: Activada.</string>
+    <string name="update_guard_protection_off">Protección: Desactivada.</string>
+    <string name="update_guard_state_active">Estado: Protegiendo tu dispositivo.</string>
+    <string name="update_guard_state_inactive">Estado: Protección en pausa.</string>
+    <string name="update_guard_card_cta">Abrir panel</string>
+
+    <!-- App Protection Strings -->
+    <string name="app_protection_title">App Protection</string>
+    <string name="app_protection_headline">Protege ADBUtility Guard</string>
+    <string name="app_protection_desc">Mantén activa la protección de tu dispositivo.</string>
+    <string name="app_protection_device_admin_label">Impedir actualizaciones y mantener ajustes de técnico</string>
+    <string name="app_protection_device_admin_explanation">Permite impedir actualizaciones del sistema, mantener los ajustes del técnico y proteger ADBUtility Guard frente a desinstalaciones accidentales.</string>
+    <string name="app_protection_disable_warning">Si desactivas esta administración, se perderá la protección para impedir actualizaciones y mantener los ajustes de técnico.</string>
+
+    <string name="app_protection_status_label">Estado de protección</string>
+    <string name="app_protection_admin_label">Administración del dispositivo</string>
+    <string name="app_protection_service_label">Servicio de protección</string>
+    <string name="app_protection_monitor_label">Supervisión de seguridad</string>
+
+    <string name="app_protection_state_full">Tu dispositivo está protegido.</string>
+    <string name="app_protection_state_partial">Protección parcial</string>
+    <string name="app_protection_state_unprotected">Protección desactivada</string>
+
+    <string name="app_protection_active">Activada</string>
+    <string name="app_protection_inactive">Desactivada</string>
+    <string name="app_protection_service_active">Activo</string>
+    <string name="app_protection_service_inactive">Inactivo</string>
+    <string name="app_protection_supervision_active">Activa</string>
+    <string name="app_protection_supervision_standby">En espera</string>
+
+    <string name="app_protection_btn_activate">Activar protección</string>
+    <string name="app_protection_warning_title">Protección desactivada</string>
+    <string name="app_protection_warning_message">Una de las protecciones de ADBUtility Guard ha dejado de estar activa.</string>
+    <string name="app_protection_warning_action">Revisar protección</string>
+    <string name="app_protection_notif_channel_name">Avisos de protección</string>
+    <string name="app_protection_notif_channel_desc">Notifica cuando se desactiva alguna protección de ADBUtility Guard.</string>
+
+    <!-- Overlay Warning Strings -->
+    <string name="warning_title">ADVERTENCIA</string>
+    <string name="warning_body">Esta operación bloqueará el dispositivo y anulará la garantía del técnico si aún está vigente.</string>
+    <string name="warning_body_reset">Esta operación bloqueará el dispositivo y anulará la garantía del técnico si aún está vigente.</string>
+    <string name="warning_body_dns">Modificar o desactivar el DNS privado bloqueará el dispositivo y anulará la garantía del técnico si aún está vigente.</string>
+    <string name="btn_exit_secure">SALIR Y PROTEGER</string>
+
+    <!-- UI Strings -->
+    <string name="status_service_active">Servicio Activo</string>
+    <string name="status_service_inactive">Servicio Inactivo</string>
+    <string name="status_service_desc_active">El servicio de accesibilidad está monitoreando el dispositivo.</string>
+    <string name="status_service_desc_inactive">Activa el servicio de accesibilidad para habilitar la protección.</string>
+    <string name="btn_enable_service">Activar en Ajustes</string>
+
+    <string name="title_protection_status">Estado de Protección</string>
+    <string name="desc_protection_active">Protección activa y en vigilancia</string>
+    <string name="desc_protection_paused">Protección pausada temporalmente</string>
+
+    <string name="title_detections_count">Detecciones Totales</string>
+    <string name="title_last_detection">Última Detección</string>
+    <string name="label_no_detections">Sin detecciones registradas</string>
+    <string name="label_package">Paquete:</string>
+    <string name="label_action">Acción:</string>
+    <string name="label_time">Hora:</string>
+
+    <string name="btn_view_history">Ver Historial</string>
+    <string name="btn_settings">Configuración</string>
+    <string name="btn_test_overlay">Probar Advertencia</string>
+
+    <string name="title_history">Historial de Detecciones</string>
+    <string name="btn_clear_history">Limpiar Historial</string>
+    <string name="history_empty">No se han registrado eventos de detección aún.</string>
+
+    <string name="title_settings">Configuración</string>
+    <string name="pref_cooldown">Tiempo de enfriamiento (cooldown):</string>
+    <string name="pref_cooldown_desc">Evita advertencias repetidas consecutivas en la misma pantalla.</string>
+    <string name="pref_vibration">Vibración al alertar</string>
+    <string name="pref_sound">Sonido de alerta</string>
+    <string name="btn_save">Guardar</string>
+    <string name="btn_close">Cerrar</string>
+</resources>

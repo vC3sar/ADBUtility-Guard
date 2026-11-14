@@ -55,7 +55,10 @@ class ResetAccessibilityService : AccessibilityService() {
         val handler = Handler(Looper.getMainLooper())
         handler.postDelayed({
             if (guardManager.currentServiceInstance === this && !guardManager.overlayController.isOverlayShowing()) {
-                guardManager.updateGuardEngine.evaluateCurrentWindowOnConnect(this)
+                evaluateCurrentResetWindow(this)
+                if (!guardManager.overlayController.isOverlayShowing()) {
+                    guardManager.updateGuardEngine.evaluateCurrentWindowOnConnect(this)
+                }
             }
         }, 300L)
         handler.postDelayed({
@@ -63,9 +66,53 @@ class ResetAccessibilityService : AccessibilityService() {
                 !guardManager.overlayController.isOverlayShowing() &&
                 !guardManager.updateGuardEngine.hasActiveProtection()
             ) {
-                guardManager.updateGuardEngine.evaluateCurrentWindowOnConnect(this)
+                evaluateCurrentResetWindow(this)
+                if (!guardManager.overlayController.isOverlayShowing()) {
+                    guardManager.updateGuardEngine.evaluateCurrentWindowOnConnect(this)
+                }
             }
         }, 1000L)
+    }
+
+    private fun evaluateCurrentResetWindow(service: ResetAccessibilityService) {
+        if (guardManager.overlayController.isOverlayShowing() ||
+            guardManager.overlayController.isExiting() ||
+            guardManager.updateGuardEngine.hasActiveProtection()
+        ) {
+            return
+        }
+
+        var root: AccessibilityNodeInfo? = null
+        try {
+            root = try {
+                service.rootInActiveWindow
+            } catch (_: Exception) {
+                null
+            } ?: return
+
+            val result = guardManager.resetDetector.evaluate(null, root)
+            if (result.isTargetScreen) {
+                val warningMessage = if (result.isDnsTampering) {
+                    service.getString(R.string.warning_body_dns)
+                } else {
+                    service.getString(R.string.warning_body_reset)
+                }
+                Log.w(TAG, "Detección positiva en ventana activa al conectar: ${result.packageName} - Regla: ${result.matchedRule}")
+                guardManager.overlayController.showWarning(
+                    service = service,
+                    detectedPackage = result.packageName,
+                    detectionType = result.matchedRule,
+                    customMessage = warningMessage
+                )
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "Error evaluando ventana activa al conectar para reset: ${t.message}", t)
+        } finally {
+            try {
+                @Suppress("DEPRECATION")
+                root?.recycle()
+            } catch (_: Exception) {}
+        }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {

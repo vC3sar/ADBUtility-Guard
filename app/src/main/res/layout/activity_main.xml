@@ -7,6 +7,7 @@
     android:background="?android:colorBackground">
 
     <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarMain"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?android:colorBackground"
@@ -37,6 +38,7 @@
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <LinearLayout
+            android:id="@+id/mainScrollContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -373,9 +375,14 @@
                     android:layout_height="48dp"
                     android:layout_marginEnd="6dp"
                     android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingHorizontal="8dp"
                     android:text="@string/btn_view_history"
+                    android:textSize="13sp"
                     app:cornerRadius="12dp"
-                    app:icon="@drawable/ic_history" />
+                    app:icon="@drawable/ic_history"
+                    app:iconPadding="6dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSettings"
@@ -384,9 +391,14 @@
                     android:layout_height="48dp"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:paddingHorizontal="8dp"
                     android:text="@string/btn_settings"
+                    android:textSize="13sp"
                     app:cornerRadius="12dp"
-                    app:icon="@drawable/ic_settings" />
+                    app:icon="@drawable/ic_settings"
+                    app:iconPadding="6dp" />
             </LinearLayout>
 
             <com.google.android.material.button.MaterialButton

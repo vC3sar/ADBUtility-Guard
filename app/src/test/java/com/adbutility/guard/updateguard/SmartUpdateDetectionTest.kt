@@ -417,5 +417,73 @@ class SmartUpdateDetectionTest {
         assertEquals(1, d2.dangerousButtons.size)
         assertEquals("Reiniciar ahora", d2.dangerousButtons.first().rawLabel)
     }
+
+    // 14. Notificación OTA en SystemUI bloquea 'Reiniciar ahora', pero notificación de Play Store en SystemUI pasa libremente
+    @Test
+    fun test14_notificationShadeOtaVsPlayStore_handlesSelectively() {
+        val otaShade = snapshot(
+            pkg = "com.android.systemui",
+            cls = "android.widget.FrameLayout",
+            texts = listOf(
+                "Actualización del sistema",
+                "Reinicia tu dispositivo para finalizar la actualización.",
+                "Reiniciar ahora"
+            ),
+            buttons = listOf(
+                button("Reiniciar ahora", viewId = "android:id/action0", left = 400, top = 520, right = 660, bottom = 600)
+            )
+        )
+        val otaDecision = detector.evaluate(otaShade)
+        assertEquals(UpdateOperationCategory.SYSTEM_UPDATE, otaDecision.category)
+        assertEquals(ClassificationOutcome.CONFIRMED_SYSTEM_UPDATE, otaDecision.outcome)
+        assertTrue(otaDecision.shouldBlock)
+        assertEquals(1, otaDecision.dangerousButtons.size)
+
+        val playStoreShade = snapshot(
+            pkg = "com.android.systemui",
+            cls = "android.widget.FrameLayout",
+            texts = listOf(
+                "Google Play Store",
+                "Actualizaciones pendientes",
+                "WhatsApp Messenger y 3 más",
+                "Actualizar todas"
+            ),
+            buttons = listOf(
+                button("Actualizar todas", viewId = "android:id/action0", left = 400, top = 520, right = 660, bottom = 600)
+            )
+        )
+        val appDecision = detector.evaluate(playStoreShade)
+        assertEquals(UpdateOperationCategory.APP_UPDATE, appDecision.category)
+        assertEquals(ClassificationOutcome.CONFIRMED_APP_OPERATION, appDecision.outcome)
+        assertFalse(appDecision.shouldBlock)
+    }
+
+    // 15. Diálogo real de Google Play Services en TECNO KM5 (Android 15)
+    @Test
+    fun test15_tecnoKm5GmsPopupDialog_isConfirmedAndBlocked() {
+        val gmsPopup = snapshot(
+            pkg = "com.google.android.gms",
+            cls = "com.google.android.gms.update.phone.PopupDialog",
+            texts = listOf(
+                "Imagen. Ícono de actualización del sistema.",
+                "Reinicia el dispositivo ahora para finalizar la actualización",
+                "Tu sistema lleva 41 días desactualizado.\n\nMás información",
+                "Descartar",
+                "Reiniciar ahora"
+            ),
+            buttons = listOf(
+                button("Descartar", viewId = "com.google.android.gms:id/material3horizontalbutton3", left = 82, top = 1058, right = 352, bottom = 1154),
+                button("Reiniciar ahora", viewId = "com.google.android.gms:id/material3horizontalbutton1", left = 368, top = 1051, right = 638, bottom = 1162)
+            )
+        )
+
+        val decision = detector.evaluate(gmsPopup)
+        assertEquals(UpdateOperationCategory.SYSTEM_UPDATE, decision.category)
+        assertEquals(ClassificationOutcome.CONFIRMED_SYSTEM_UPDATE, decision.outcome)
+        assertTrue("El diálogo de reinicio de GMS debe ser bloqueado", decision.shouldBlock)
+        assertEquals(1, decision.dangerousButtons.size)
+        assertEquals("reiniciar ahora", decision.dangerousButtons.first().normalizedLabel)
+        assertEquals(368, decision.dangerousButtons.first().boundsInScreen.left)
+    }
 }
 

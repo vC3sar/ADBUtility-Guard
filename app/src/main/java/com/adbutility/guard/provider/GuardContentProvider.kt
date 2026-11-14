@@ -31,6 +31,7 @@ class GuardContentProvider : ContentProvider() {
         const val METHOD_LAST_DETECTION = "getLastDetection"
         const val METHOD_HISTORY = "getHistory"
         const val METHOD_CLEAR_HISTORY = "clearHistory"
+        const val METHOD_UPDATE_DIAGNOSTICS = "getUpdateDiagnostics"
         const val METHOD_TEST = "testOverlay"
 
         const val KEY_RESPONSE_JSON = "response_json"
@@ -65,6 +66,10 @@ class GuardContentProvider : ContentProvider() {
             METHOD_CLEAR_HISTORY -> {
                 adbComm.clearHistory().toString()
             }
+            METHOD_UPDATE_DIAGNOSTICS -> {
+                val limit = arg?.toIntOrNull() ?: 30
+                adbComm.getUpdateGuardDiagnostics(limit).toString()
+            }
             METHOD_TEST -> {
                 context?.let { ResetGuardManager.getInstance(it).triggerTestOverlay() }
                 "{\"status\":\"test_overlay_triggered\"}"
@@ -94,6 +99,7 @@ class GuardContentProvider : ContentProvider() {
             "status" -> adbComm.getServiceStatus().toString()
             "last_detection" -> adbComm.getLastDetection().toString()
             "history" -> adbComm.getDetectionHistory().toString()
+            "update_diagnostics" -> adbComm.getUpdateGuardDiagnostics().toString()
             else -> adbComm.getServiceStatus().toString()
         }
 

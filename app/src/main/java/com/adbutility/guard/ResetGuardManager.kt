@@ -19,7 +19,7 @@ class ResetGuardManager private constructor(context: Context) {
     val eventLogger = EventLogger(appContext)
     val resetDetector = ResetDetector(preferencesManager)
     val overlayController = OverlayController(appContext, preferencesManager, eventLogger)
-    val updateGuardEngine = UpdateGuardEngine(appContext)
+    val updateGuardEngine = UpdateGuardEngine(appContext, preferencesManager)
     val protectionMonitor = ProtectionMonitor(appContext, preferencesManager)
     val appProtectionMonitor = AppProtectionAccessibilityMonitor(protectionMonitor)
 

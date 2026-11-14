@@ -2,17 +2,23 @@ package com.adbutility.guard.updateguard
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Context
+import android.graphics.Rect
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+
+import com.adbutility.guard.PreferencesManager
 
 /**
  * Coordinador principal del módulo Update Guard.
  * Conecta el servicio de accesibilidad existente con el motor inteligente de detección,
  * los escudos selectivos de botones, el aviso visual y el registro diagnóstico interno.
  */
-class UpdateGuardEngine(context: Context) {
+class UpdateGuardEngine(
+    context: Context,
+    private val preferencesManager: PreferencesManager = PreferencesManager(context)
+) {
 
     companion object {
         private const val TAG = "UpdateGuardEngine"
@@ -40,7 +46,7 @@ class UpdateGuardEngine(context: Context) {
         event: AccessibilityEvent,
         activeRoot: AccessibilityNodeInfo?
     ) {
-        if (!settings.isUpdateGuardEnabled) {
+        if (!settings.isUpdateGuardEnabled || preferencesManager.isTechnicianModePaused()) {
             if (hasActiveProtection()) {
                 clearProtectionOverlays()
             }
@@ -94,7 +100,7 @@ class UpdateGuardEngine(context: Context) {
      * para proteger diálogos de actualización del sistema que ya estaban en pantalla.
      */
     fun evaluateCurrentWindowOnConnect(service: AccessibilityService) {
-        if (!settings.isUpdateGuardEnabled) {
+        if (!settings.isUpdateGuardEnabled || preferencesManager.isTechnicianModePaused()) {
             return
         }
 
@@ -339,6 +345,14 @@ class UpdateGuardEngine(context: Context) {
     ): RootResolution {
         val activePkg = activeRoot?.packageName?.toString()?.trim().orEmpty()
         if (activeRoot != null && activePkg.isNotEmpty() && activePkg != OWN_PACKAGE) {
+            // Si llega evento de la cortina de notificaciones expandida (SystemUI grande) y no hay otro diálogo activo,
+            // buscar esa ventana de SystemUI para detectar acciones OTA en notificaciones sin interferir con el reloj de StatusBar.
+            if (eventPkg == "com.android.systemui" &&
+                activePkg != "com.android.systemui" &&
+                !hasActiveProtection()
+            ) {
+                findExpandedSystemUiWindowRoot(service)?.let { return it }
+            }
             return RootResolution(activeRoot, mustRecycleRoot = false)
         }
 
@@ -395,6 +409,37 @@ class UpdateGuardEngine(context: Context) {
         }
 
         return RootResolution(null, mustRecycleRoot = false)
+    }
+
+    private fun findExpandedSystemUiWindowRoot(service: AccessibilityService): RootResolution? {
+        return try {
+            val windows = service.windows ?: return null
+            val bounds = Rect()
+            for (win in windows.sortedByDescending { it.layer }) {
+                if (win.type == AccessibilityWindowInfo.TYPE_ACCESSIBILITY_OVERLAY ||
+                    win.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD
+                ) {
+                    continue
+                }
+                win.getBoundsInScreen(bounds)
+                if (bounds.height() < 450) {
+                    continue
+                }
+                val root = win.root ?: continue
+                val pkg = root.packageName?.toString()?.trim().orEmpty()
+                if (pkg == "com.android.systemui") {
+                    return RootResolution(root, mustRecycleRoot = true)
+                }
+                @Suppress("DEPRECATION")
+                try {
+                    root.recycle()
+                } catch (_: Exception) {
+                }
+            }
+            null
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun logDiagnosticDedup(

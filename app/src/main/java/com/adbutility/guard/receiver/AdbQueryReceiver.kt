@@ -29,6 +29,7 @@ class AdbQueryReceiver : BroadcastReceiver() {
             "version" -> comm.getAppVersionInfo().toString()
             "last_detection" -> comm.getLastDetection().toString()
             "history" -> comm.getDetectionHistory().toString()
+            "update_diagnostics" -> comm.getUpdateGuardDiagnostics().toString()
             "clear" -> comm.clearHistory().toString()
             "status" -> comm.getServiceStatus().toString()
             "test" -> {

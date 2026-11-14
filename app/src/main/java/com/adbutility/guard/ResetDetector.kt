@@ -11,7 +11,7 @@ import java.util.Locale
  * Analiza paquetes, actividades, textos y descripciones accesibles en español e inglés,
  * aplicando normalización ortográfica, reglas combinadas OEM y control de enfriamiento.
  */
-class ResetDetector(private val preferencesManager: PreferencesManager) {
+class ResetDetector(private val preferencesManager: PreferencesManager? = null) {
 
     data class DetectionResult(
         val isTargetScreen: Boolean,
@@ -24,8 +24,8 @@ class ResetDetector(private val preferencesManager: PreferencesManager) {
 
     companion object {
         private const val TAG = "ResetDetector"
-        private const val MAX_TREE_DEPTH = 7
-        private const val MAX_NODES_VISITED = 80
+        private const val MAX_TREE_DEPTH = 16
+        private const val MAX_NODES_VISITED = 160
 
         // Paquetes objetivo de Ajustes
         private val TARGET_PACKAGES = setOf(
@@ -60,22 +60,19 @@ class ResetDetector(private val preferencesManager: PreferencesManager) {
         // Frases de restablecimiento en Español (sin tildes)
         private val RESET_PHRASES_ES = listOf(
             "borrar todos los datos",
+            "borrar todo (restablecer configuracion de fabrica)",
+            "borrar todo restablecer configuracion de fabrica",
             "restablecer datos de fabrica",
             "restablecimiento de fabrica",
             "restablecer de fabrica",
             "restablecer la configuracion de fabrica",
             "restablecer configuracion de fabrica",
             "restablecer valores de fabrica",
-            "opciones de restablecimiento",
-            "restablecer opciones",
             "volver al estado de fabrica",
             "eliminar todos los datos",
             "borrar todo del telefono",
             "se borraran todos los datos",
-            "borrar todo el contenido",
-            "restablecer telefono",
-            "restablecer dispositivo",
-            "Borrar todos los datos"
+            "borrar todo el contenido"
         )
 
         // Frases de restablecimiento en Inglés
@@ -83,13 +80,11 @@ class ResetDetector(private val preferencesManager: PreferencesManager) {
             "factory data reset",
             "factory reset",
             "erase all data",
-            "reset options",
             "erase all data (factory reset)",
             "reset phone to factory",
             "delete all data (factory reset)",
             "all data will be erased",
-            "master clear",
-            "clear all data"
+            "master clear"
         )
 
         // Indicadores específicos del diálogo/pantalla de modificación de DNS Privado
@@ -124,18 +119,64 @@ class ResetDetector(private val preferencesManager: PreferencesManager) {
     private var lastScreenSignature: String = ""
 
     /**
-     * Evalúa si el evento de accesibilidad corresponde a una pantalla de restablecimiento
-     * o a un intento de modificar/desactivar el DNS privado.
+     * Evalúa si el evento de accesibilidad o el árbol de nodos activo corresponde a una
+     * pantalla de restablecimiento o a un intento de modificar/desactivar el DNS privado.
      */
-    fun evaluate(event: AccessibilityEvent, rootNode: AccessibilityNodeInfo?): DetectionResult {
-        if (!preferencesManager.isProtectionEnabled) {
+    fun evaluate(event: AccessibilityEvent? = null, rootNode: AccessibilityNodeInfo?): DetectionResult {
+        val isEffectiveProtection = preferencesManager?.isEffectiveProtectionActive() ?: true
+        if (!isEffectiveProtection) {
             return DetectionResult(false, "", "", "protection_disabled", 0)
         }
 
-        val pkgName = event.packageName?.toString() ?: ""
-        val className = event.className?.toString() ?: ""
+        val pkgName = event?.packageName?.toString() ?: rootNode?.packageName?.toString() ?: ""
+        val className = event?.className?.toString() ?: rootNode?.className?.toString() ?: ""
 
         // Ignorar eventos generados por nuestra propia aplicación
+        if (pkgName == "com.adbutility.guard" || pkgName.isEmpty()) {
+            return DetectionResult(false, pkgName, className, "ignored_own_package", 0)
+        }
+
+        // Extracción de textos del árbol de nodos de accesibilidad
+        val extractedTexts = mutableListOf<String>()
+        var foundDnsViewId = false
+
+        if (rootNode != null) {
+            foundDnsViewId = extractTextsFromNode(rootNode, extractedTexts, depth = 0, count = IntArray(1))
+        }
+
+        // Agregar textos del propio evento si está presente
+        event?.text?.forEach { charSeq ->
+            charSeq?.toString()?.let { extractedTexts.add(it) }
+        }
+        event?.contentDescription?.toString()?.let { extractedTexts.add(it) }
+
+        val cooldownSec = preferencesManager?.cooldownSeconds ?: 0
+        return evaluateRaw(
+            pkgName = pkgName,
+            className = className,
+            extractedTexts = extractedTexts,
+            foundDnsViewId = foundDnsViewId,
+            isProtectionActive = true,
+            cooldownSeconds = cooldownSec
+        )
+    }
+
+    /**
+     * Motor puro de evaluación de contenido textual, nombres de actividad y paquetes.
+     * Desacoplado del entorno de accesibilidad para alta testeabilidad y velocidad.
+     */
+    fun evaluateRaw(
+        pkgName: String,
+        className: String,
+        extractedTexts: List<String>,
+        foundDnsViewId: Boolean = false,
+        isProtectionActive: Boolean = true,
+        cooldownSeconds: Int = 0
+    ): DetectionResult {
+        if (!isProtectionActive) {
+            return DetectionResult(false, "", "", "protection_disabled", 0)
+        }
+
         if (pkgName == "com.adbutility.guard" || pkgName.isEmpty()) {
             return DetectionResult(false, pkgName, className, "ignored_own_package", 0)
         }
@@ -150,24 +191,10 @@ class ResetDetector(private val preferencesManager: PreferencesManager) {
         }
 
         val now = System.currentTimeMillis()
-        val cooldownMillis = preferencesManager.cooldownSeconds * 1000L
+        val cooldownMillis = cooldownSeconds * 1000L
         val isCooldownActive = (now - lastTriggerTime) < cooldownMillis
 
         val lowerClassName = className.lowercase(Locale.ROOT)
-
-        // Extracción de textos del árbol de nodos de accesibilidad
-        val extractedTexts = mutableListOf<String>()
-        var foundDnsViewId = false
-
-        if (rootNode != null) {
-            foundDnsViewId = extractTextsFromNode(rootNode, extractedTexts, depth = 0, count = IntArray(1))
-        }
-
-        // Agregar textos del propio evento
-        event.text?.forEach { charSeq ->
-            charSeq?.toString()?.let { extractedTexts.add(it) }
-        }
-        event.contentDescription?.toString()?.let { extractedTexts.add(it) }
 
         // Normalizar texto (minúsculas y eliminación de acentos diacríticos)
         val rawCombined = extractedTexts.joinToString(" ")
@@ -243,13 +270,15 @@ class ResetDetector(private val preferencesManager: PreferencesManager) {
         }
 
         if (hasResetKeyword) {
-            // Filtrar falsos positivos de red o apps
+            // Filtrar falsos positivos de red o apps cuando no hay opción real de fábrica
             var isBenign = false
             for (exclusion in BENIGN_EXCLUSIONS) {
                 if (normalizedContent.contains(exclusion)) {
                     val containsRealFactoryTerm = normalizedContent.contains("fabrica") ||
                             normalizedContent.contains("factory") ||
                             normalizedContent.contains("borrar todos") ||
+                            normalizedContent.contains("borrar todo (restablecer") ||
+                            (normalizedContent.contains("borrar todo") && normalizedContent.contains("fabrica")) ||
                             normalizedContent.contains("erase all")
                     if (!containsRealFactoryTerm) {
                         isBenign = true

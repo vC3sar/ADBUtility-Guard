@@ -10,6 +10,7 @@ import com.adbutility.guard.ResetGuardManager
 import com.adbutility.guard.databinding.ActivityAppProtectionBinding
 import com.adbutility.guard.protection.ProtectionLevel
 import com.adbutility.guard.protection.ProtectionSnapshot
+import com.adbutility.guard.ui.UiInsetsHelper
 
 /**
  * Pantalla minimalista de App Protection.
@@ -37,6 +38,7 @@ class AppProtectionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAppProtectionBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        UiInsetsHelper.applyEdgeToEdge(this, binding.appBarAppProtection, binding.appProtectionContent)
 
         guardManager = ResetGuardManager.getInstance(this)
 

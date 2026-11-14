@@ -91,4 +91,17 @@
     <string name="pref_sound">Sonido de alerta</string>
     <string name="btn_save">Guardar</string>
     <string name="btn_close">Cerrar</string>
+
+    <!-- Modo Técnico & PIN Strings -->
+    <string name="tech_mode_title">Modo Técnico y PIN</string>
+    <string name="tech_mode_manage_btn">Gestionar PIN / Pausa</string>
+    <string name="tech_mode_pin_prompt_title">PIN del Técnico</string>
+    <string name="tech_mode_pin_hint">PIN (mínimo 4 dígitos)</string>
+    <string name="tech_mode_pause_banner">Modo técnico activo: protecciones en pausa temporal</string>
+
+    <!-- Update Guard Diagnostics UI -->
+    <string name="update_diag_title">Diagnóstico reciente</string>
+    <string name="update_diag_empty">Sin eventos recientes registrados para Update Guard.</string>
+    <string name="update_diag_refresh">Actualizar</string>
+    <string name="update_diag_clear">Limpiar</string>
 </resources>

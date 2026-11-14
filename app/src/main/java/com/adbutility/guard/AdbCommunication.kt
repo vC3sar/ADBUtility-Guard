@@ -44,18 +44,56 @@ class AdbCommunication(private val context: Context) {
     }
 
     fun getServiceStatus(): JSONObject {
+        val prefs = guardManager.preferencesManager
         val isServiceEnabled = guardManager.isAccessibilityServiceEnabled()
-        val isProtectionActive = guardManager.preferencesManager.isProtectionEnabled
-        val cooldown = guardManager.preferencesManager.cooldownSeconds
-        val totalDetections = guardManager.preferencesManager.totalDetectionsCount
+        val isProtectionActive = prefs.isProtectionEnabled
+        val cooldown = prefs.cooldownSeconds
+        val totalDetections = prefs.totalDetectionsCount
+
+        val updateGuardEnabled = guardManager.updateGuardEngine.settings.isUpdateGuardEnabled
+        val updateBlockedCount = guardManager.updateGuardEngine.eventLogger.getBlockedCount()
+
+        val protectionSnapshot = guardManager.protectionMonitor.evaluateProtection(notifyOnRegression = false)
 
         return JSONObject().apply {
             put("serviceEnabled", isServiceEnabled)
             put("protectionEnabled", isProtectionActive)
+            put("effectiveProtectionActive", prefs.isEffectiveProtectionActive())
             put("cooldownSeconds", cooldown)
             put("totalDetections", totalDetections)
+            put(
+                "technicianMode",
+                JSONObject().apply {
+                    put("pinEnabled", prefs.hasTechnicianPin())
+                    put("paused", prefs.isTechnicianModePaused())
+                    put("pauseRemainingSeconds", prefs.getTechnicianPauseRemainingSeconds())
+                }
+            )
+            put(
+                "updateGuard",
+                JSONObject().apply {
+                    put("enabled", updateGuardEnabled)
+                    put("active", updateGuardEnabled && isServiceEnabled && !prefs.isTechnicianModePaused())
+                    put("blockedCount", updateBlockedCount)
+                }
+            )
+            put(
+                "appProtection",
+                JSONObject().apply {
+                    put("level", protectionSnapshot.level.name)
+                    put("deviceAdminActive", protectionSnapshot.isDeviceAdminActive)
+                    put("accessibilityServiceActive", protectionSnapshot.isAccessibilityServiceActive)
+                    put("notificationsEnabled", protectionSnapshot.areNotificationsEnabled)
+                    put("supervisionActive", protectionSnapshot.isSecuritySupervisionActive)
+                    put("pendingDeactivationNotice", protectionSnapshot.hasPendingDeactivationNotice)
+                }
+            )
             put("deviceInfo", DeviceInfo.toJson())
         }
+    }
+
+    fun getUpdateGuardDiagnostics(limit: Int = 30): JSONObject {
+        return guardManager.updateGuardEngine.eventLogger.getDiagnosticsAsJson(limit)
     }
 
     fun getLastDetection(): JSONObject {

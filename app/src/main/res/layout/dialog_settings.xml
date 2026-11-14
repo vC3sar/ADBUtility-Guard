@@ -58,6 +58,38 @@
         android:text="@string/pref_sound"
         android:textColor="?attr/colorOnSurface" />
 
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="14dp"
+        android:background="?attr/colorSurfaceVariant" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/tech_mode_title"
+        android:textColor="?attr/colorOnSurface"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvTechModeStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textSize="12.5sp" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnManageTechMode"
+        style="@style/Widget.Material3.Button.TonalButton"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="8dp"
+        android:text="@string/tech_mode_manage_btn"
+        app:cornerRadius="10dp" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCloseSettings"
         style="@style/Widget.Material3.Button"

@@ -8,6 +8,11 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Registro diagnóstico interno del módulo Update Guard.
@@ -162,6 +167,57 @@ class UpdateEventLogger(context: Context) :
             Log.e(TAG, "Error leyendo diagnósticos: ${e.message}")
         }
         return list
+    }
+
+    @Synchronized
+    fun clearDiagnostics() {
+        try {
+            writableDatabase.delete(TABLE_DIAG, null, null)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error limpiando diagnósticos: ${e.message}")
+        }
+    }
+
+    @Synchronized
+    fun getBlockedCount(): Int {
+        return try {
+            val db = readableDatabase
+            val cursor = db.rawQuery(
+                "SELECT COUNT(*) FROM $TABLE_DIAG WHERE $COL_CLASSIFICATION = ?",
+                arrayOf(ClassificationOutcome.CONFIRMED_SYSTEM_UPDATE.name)
+            )
+            cursor.use {
+                if (it.moveToFirst()) it.getInt(0) else 0
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    fun getDiagnosticsAsJson(limit: Int = 30): JSONObject {
+        val records = getRecentDiagnostics(limit)
+        val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+        val array = JSONArray()
+        for (item in records) {
+            array.put(
+                JSONObject().apply {
+                    put("id", item.id)
+                    put("timestamp", item.timestamp)
+                    put("formattedDate", sdf.format(Date(item.timestamp)))
+                    put("packageName", item.packageName)
+                    put("category", item.category)
+                    put("classification", item.classification)
+                    put("reason", item.decisionReason)
+                    put("blockResult", item.blockResult)
+                    put("overlayShown", item.overlayShown)
+                }
+            )
+        }
+        return JSONObject().apply {
+            put("count", records.size)
+            put("blockedCount", getBlockedCount())
+            put("events", array)
+        }
     }
 
     private fun pruneOld(db: SQLiteDatabase) {

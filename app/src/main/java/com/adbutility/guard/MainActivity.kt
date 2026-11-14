@@ -12,6 +12,8 @@ import com.adbutility.guard.databinding.ActivityMainBinding
 import com.adbutility.guard.databinding.DialogHistoryBinding
 import com.adbutility.guard.databinding.DialogSettingsBinding
 import com.adbutility.guard.protection.ProtectionLevel
+import com.adbutility.guard.ui.TechnicianPinDialog
+import com.adbutility.guard.ui.UiInsetsHelper
 import com.adbutility.guard.ui.protection.AppProtectionActivity
 import com.adbutility.guard.ui.updateguard.UpdateGuardActivity
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -28,11 +30,13 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var guardManager: ResetGuardManager
+    private var suppressSwitchListener = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        UiInsetsHelper.applyEdgeToEdge(this, binding.appBarMain, binding.mainScrollContent)
 
         guardManager = ResetGuardManager.getInstance(this)
         guardManager.protectionMonitor.schedulePeriodicChecks()
@@ -47,15 +51,31 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupUI() {
         // Interruptor de estado de protección (Activa / Pausada)
-        binding.switchProtection.isChecked = guardManager.preferencesManager.isProtectionEnabled
+        setProtectionSwitchSilent(guardManager.preferencesManager.isProtectionEnabled)
         binding.switchProtection.setOnCheckedChangeListener { _, isChecked ->
-            guardManager.preferencesManager.isProtectionEnabled = isChecked
-            updateProtectionStatusText(isChecked)
-            Snackbar.make(
-                binding.root,
-                if (isChecked) "Protección activada" else "Protección pausada",
-                Snackbar.LENGTH_SHORT
-            ).show()
+            if (suppressSwitchListener) return@setOnCheckedChangeListener
+            if (!isChecked) {
+                TechnicianPinDialog.verifyOrRun(
+                    context = this,
+                    prefs = guardManager.preferencesManager,
+                    actionTitle = "Pausar protección",
+                    onVerified = {
+                        guardManager.preferencesManager.isProtectionEnabled = false
+                        guardManager.overlayController.dismissOverlay()
+                        guardManager.updateGuardEngine.clearProtectionOverlays()
+                        refreshDashboard()
+                        Snackbar.make(binding.root, "Protección pausada", Snackbar.LENGTH_SHORT).show()
+                    },
+                    onCancelled = {
+                        setProtectionSwitchSilent(true)
+                    }
+                )
+            } else {
+                guardManager.preferencesManager.isProtectionEnabled = true
+                guardManager.preferencesManager.endTechnicianPause()
+                refreshDashboard()
+                Snackbar.make(binding.root, "Protección activada", Snackbar.LENGTH_SHORT).show()
+            }
         }
 
         // Botón para habilitar accesibilidad en Ajustes del Sistema
@@ -79,9 +99,14 @@ class MainActivity : AppCompatActivity() {
             showHistoryDialog()
         }
 
-        // Configuración
+        // Configuración (protegida por PIN si está configurado)
         binding.btnSettings.setOnClickListener {
-            showSettingsDialog()
+            TechnicianPinDialog.verifyOrRun(
+                context = this,
+                prefs = guardManager.preferencesManager,
+                actionTitle = getString(R.string.title_settings),
+                onVerified = { showSettingsDialog() }
+            )
         }
 
         // Probar Advertencia Flotante
@@ -127,17 +152,27 @@ class MainActivity : AppCompatActivity() {
 
         // Estado de Protección
         val isProtectionEnabled = guardManager.preferencesManager.isProtectionEnabled
-        binding.switchProtection.isChecked = isProtectionEnabled
+        setProtectionSwitchSilent(isProtectionEnabled)
         updateProtectionStatusText(isProtectionEnabled)
 
         // Estado simple de Update Guard
-        val isUpdateGuardOn = guardManager.updateGuardEngine.settings.isUpdateGuardEnabled && isServiceActive
-        if (isUpdateGuardOn) {
-            binding.tvMainUpdateGuardStatus.setText(R.string.update_guard_state_active)
-            binding.tvMainUpdateGuardStatus.setTextColor(ContextCompat.getColor(this, R.color.brand_success))
-        } else {
-            binding.tvMainUpdateGuardStatus.setText(R.string.update_guard_state_inactive)
-            binding.tvMainUpdateGuardStatus.setTextColor(ContextCompat.getColor(this, R.color.brand_danger))
+        val isPausedByTech = guardManager.preferencesManager.isTechnicianModePaused()
+        val isUpdateGuardOn = guardManager.updateGuardEngine.settings.isUpdateGuardEnabled &&
+            isServiceActive &&
+            !isPausedByTech
+        when {
+            isPausedByTech -> {
+                binding.tvMainUpdateGuardStatus.setText(R.string.tech_mode_pause_banner)
+                binding.tvMainUpdateGuardStatus.setTextColor(ContextCompat.getColor(this, R.color.brand_warning))
+            }
+            isUpdateGuardOn -> {
+                binding.tvMainUpdateGuardStatus.setText(R.string.update_guard_state_active)
+                binding.tvMainUpdateGuardStatus.setTextColor(ContextCompat.getColor(this, R.color.brand_success))
+            }
+            else -> {
+                binding.tvMainUpdateGuardStatus.setText(R.string.update_guard_state_inactive)
+                binding.tvMainUpdateGuardStatus.setTextColor(ContextCompat.getColor(this, R.color.brand_danger))
+            }
         }
 
         // Estado real de App Protection
@@ -186,17 +221,34 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun setProtectionSwitchSilent(checked: Boolean) {
+        suppressSwitchListener = true
+        binding.switchProtection.isChecked = checked
+        suppressSwitchListener = false
+    }
+
     private fun updateProtectionStatusText(enabled: Boolean) {
-        if (enabled) {
-            binding.tvProtectionDesc.setText(R.string.desc_protection_active)
-            binding.tvProtectionTitle.setTextColor(
-                ContextCompat.getColor(this, R.color.brand_success)
-            )
-        } else {
-            binding.tvProtectionDesc.setText(R.string.desc_protection_paused)
-            binding.tvProtectionTitle.setTextColor(
-                ContextCompat.getColor(this, R.color.brand_danger)
-            )
+        val prefs = guardManager.preferencesManager
+        when {
+            prefs.isTechnicianModePaused() -> {
+                val secs = prefs.getTechnicianPauseRemainingSeconds()
+                binding.tvProtectionDesc.text = "Modo técnico en pausa (${secs}s restantes)"
+                binding.tvProtectionTitle.setTextColor(
+                    ContextCompat.getColor(this, R.color.brand_warning)
+                )
+            }
+            enabled -> {
+                binding.tvProtectionDesc.setText(R.string.desc_protection_active)
+                binding.tvProtectionTitle.setTextColor(
+                    ContextCompat.getColor(this, R.color.brand_success)
+                )
+            }
+            else -> {
+                binding.tvProtectionDesc.setText(R.string.desc_protection_paused)
+                binding.tvProtectionTitle.setTextColor(
+                    ContextCompat.getColor(this, R.color.brand_danger)
+                )
+            }
         }
     }
 
@@ -225,9 +277,16 @@ class MainActivity : AppCompatActivity() {
         loadData()
 
         dialogBinding.btnClearHistory.setOnClickListener {
-            guardManager.eventLogger.clearHistory()
-            loadData()
-            refreshDashboard()
+            TechnicianPinDialog.verifyOrRun(
+                context = this,
+                prefs = guardManager.preferencesManager,
+                actionTitle = getString(R.string.btn_clear_history),
+                onVerified = {
+                    guardManager.eventLogger.clearHistory()
+                    loadData()
+                    refreshDashboard()
+                }
+            )
         }
 
         dialogBinding.btnCloseHistory.setOnClickListener {
@@ -253,6 +312,30 @@ class MainActivity : AppCompatActivity() {
 
         dialogBinding.switchVibration.isChecked = guardManager.preferencesManager.isVibrationEnabled
         dialogBinding.switchSound.isChecked = guardManager.preferencesManager.isSoundEnabled
+
+        fun refreshTechModeText() {
+            val prefs = guardManager.preferencesManager
+            val pinState = if (prefs.hasTechnicianPin()) "PIN configurado" else "Sin PIN"
+            val pauseState = if (prefs.isTechnicianModePaused()) {
+                " • Pausa activa (${prefs.getTechnicianPauseRemainingSeconds()}s)"
+            } else {
+                ""
+            }
+            dialogBinding.tvTechModeStatus.text = "$pinState$pauseState"
+        }
+
+        refreshTechModeText()
+
+        dialogBinding.btnManageTechMode.setOnClickListener {
+            TechnicianPinDialog.showManageDialog(this, guardManager.preferencesManager) { pausedNow ->
+                if (pausedNow) {
+                    guardManager.overlayController.dismissOverlay()
+                    guardManager.updateGuardEngine.clearProtectionOverlays()
+                }
+                refreshTechModeText()
+                refreshDashboard()
+            }
+        }
 
         dialogBinding.btnCloseSettings.setOnClickListener {
             guardManager.preferencesManager.cooldownSeconds = dialogBinding.sliderCooldown.value.toInt()
